@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>任务图形化</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="render.js"></script>
+    <script src="chart.js"></script>
+</head>
+<body>
+
+<ul id="myTab" class="nav nav-tabs">
+    <li class="active">
+        <a href="#upload" data-toggle="tab">上传文件</a>
+    </li>
+    <li><a href="#chart" data-toggle="tab">图形</a></li>
+</ul>
+<div id="myTabContent" class="tab-content">
+    <div class="tab-pane fade in active" id="upload">
+        <p>
+        <div class="alert alert-success">
+            仅支持excel文件，且"研发计划发布日期\研发封版日期"、"环节"、"发布补丁"列必须存在
+        </div>
+        <form role="form" id="fileForm" action="/task-chart/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="radio-inline">
+                    <input type="radio"  value="1" name="dateType" checked>研发计划发布日期
+                </label>
+                <label class="radio-inline">
+                    <input type="radio"  value="2" name="dateType">研发封板日期
+                </label>
+            </div>
+            <div class="form-group"  style="display: inline-block;float: left ">
+                <input type="file" class="form-control" placeholder="请选择excel文件" id="fileInput" name="file">
+            </div>
+            <button style="float: left;margin-left: 10px" type="button" id="uploadBtn" class="btn btn-primary">上传</button>
+        </form>
+        </p>
+    </div>
+    <div class="tab-pane fade" id="chart">
+        <div style="width: 90%; height: 80%">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+</div>
+</div>
+<div id="msgModel" class="modal-dialog" role="document"></div>
+</body>
+</html>
