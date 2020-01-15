@@ -12,7 +12,11 @@ function renderChart(data) {
         datasets.push(dataset);
     }
     barChartData.datasets = datasets;
-    var ctx = document.getElementById('canvas').getContext('2d');
+    $("#canvas").remove();
+    $("#canvasDiv").append("<canvas id=\"canvas\"></canvas>");
+    var c = document.getElementById('canvas');
+    var ctx = c.getContext('2d');
+
     window.myBar = new Chart(ctx, {
         type: 'bar',
         data: barChartData,

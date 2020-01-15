@@ -22,15 +22,12 @@ $(function () {
                         renderChart(result);
                         $('#myTab a[href="#chart"]').tab('show');
                     }
-                    $("#uploadBtn").disable();
                 },
                 //请求失败，包含具体的错误信息
                 error: function (e) {
-                    $("#uploadBtn").disable();
                     alert("出错啦！！ε(┬┬﹏┬┬)3");
                 }
             });
-            $("#uploadBtn").disabled();
         }
     });
 });

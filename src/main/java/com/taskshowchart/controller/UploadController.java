@@ -80,9 +80,9 @@ public class UploadController {
     private List<String> getTitleList(String dateType) {
         List<String> titleList = new ArrayList<>();
         titleList.add("发布补丁");
-        titleList.add("环节");
+        titleList.add("工单环节");
         if ("1".equals(dateType)) {
-            titleList.add("研发计划发布日期");
+            titleList.add("计划发布日期");
         } else {
             titleList.add("研发封版日期");
         }
@@ -225,13 +225,13 @@ public class UploadController {
      */
     private TaskDto getCellData(Row row, Map<String, Integer> cellMap, List<String> linkList) {
         TaskDto taskDto = new TaskDto();
-        Cell cell = row.getCell(cellMap.get("研发计划发布日期") == null ? cellMap.get("研发封版日期") : cellMap.get("研发计划发布日期"));
+        Cell cell = row.getCell(cellMap.get("计划发布日期") == null ? cellMap.get("研发封版日期") : cellMap.get("计划发布日期"));
         if (cell != null) {
             cell.setCellType(Cell.CELL_TYPE_STRING);
             taskDto.setPublishPlanDate(cell.getStringCellValue().trim());
         }
 
-        cell = row.getCell(cellMap.get("环节"));
+        cell = row.getCell(cellMap.get("工单环节"));
         if (cell != null) {
             cell.setCellType(Cell.CELL_TYPE_STRING);
             taskDto.setLink(cell.getStringCellValue());

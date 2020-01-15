@@ -22,12 +22,12 @@
     <div class="tab-pane fade in active" id="upload">
         <p>
         <div class="alert alert-success">
-            仅支持excel文件，且"研发计划发布日期\研发封版日期"、"环节"、"发布补丁"列必须存在
+            仅支持excel文件，且"计划发布日期\研发封版日期"、"工单环节"、"发布补丁"列必须存在
         </div>
         <form role="form" id="fileForm" action="/task-chart/upload" method="post" enctype="multipart/form-data">
             <div class="form-group">
                 <label class="radio-inline">
-                    <input type="radio"  value="1" name="dateType" checked>研发计划发布日期
+                    <input type="radio"  value="1" name="dateType" checked>计划发布日期
                 </label>
                 <label class="radio-inline">
                     <input type="radio"  value="2" name="dateType">研发封板日期
@@ -41,7 +41,7 @@
         </p>
     </div>
     <div class="tab-pane fade" id="chart">
-        <div style="width: 90%; height: 80%">
+        <div style="width: 90%; height: 80%" id="canvasDiv">
             <canvas id="canvas"></canvas>
         </div>
     </div>
