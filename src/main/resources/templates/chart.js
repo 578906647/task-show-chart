@@ -1,26 +1,29 @@
 $(function () {
-    // 绑定上传事件
-    $("#uploadBtn").bind("click", function () {
-        const fileInput = $("#fileInput");
-        if (fileInput.val() === '') {
-            alert("哎哎哎,你文件呢？？(*￣︿￣)");
+    //初始化日期控件
+    $('#datetimeDiv').datetimepicker({
+        format: 'YYYY-MM-DD',
+        locale: moment.locale('zh-cn'),
+        defaultDate: new Date()
+    });
+    // 绑定查询事件
+    $("#queryBtn").bind("click", function () {
+        const date = $("#dateInput").val();
+        if (date === '') {
+            alert("日期没有选择！！(*￣︿￣)");
         } else {
             $.ajax({
                 //请求方式
-                type: "POST",
-                processData: false,
-                contentType: false,
+                type: "GET",
                 //请求地址
-                url: "/task-chart/upload",
+                url: "/task-chart/parse",
                 //数据，json字符串
-                data: new FormData($('#fileForm')[0]),
+                data: {"date": date, "dateType": $('input:radio:checked').val()},
                 //请求成功
                 success: function (result) {
                     if (!result.flag) {
                         alert(result.msg);
                     } else {
                         renderChart(result);
-                        $('#myTab a[href="#chart"]').tab('show');
                     }
                 },
                 //请求失败，包含具体的错误信息
@@ -30,4 +33,5 @@ $(function () {
             });
         }
     });
+    $("#queryBtn").click();
 });

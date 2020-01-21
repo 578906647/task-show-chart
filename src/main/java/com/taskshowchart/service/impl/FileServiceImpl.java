@@ -1,104 +1,49 @@
-package com.taskshowchart.controller;
+package com.taskshowchart.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.taskshowchart.dto.RespDto;
 import com.taskshowchart.dto.TaskDto;
+import com.taskshowchart.service.FileService;
 import org.apache.poi.ss.usermodel.*;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Description: 上传文件
+ * Description: TODO
+ *
+ * @author bai.wenlong
+ * @date 2020/1/20 16:49
  */
-@RestController
-public class UploadController {
-
+@Service
+public class FileServiceImpl implements FileService {
     /**
-     * 文件后缀集合
-     */
-    private static List<String> suffixList = new ArrayList<String>() {
-        {
-            add("xls");
-            add("xlsx");
-        }
-    };
-
-    /**
-     * Description: 上传文件
-     *
-     * @author bai.wenlong
-     * @date 2020/1/9 14:04
-     */
-    @PostMapping("/upload")
-    @ResponseBody
-    public RespDto upload(HttpServletRequest req, @RequestParam("file") MultipartFile file) {
-        //  根据类型区分使用哪个日期作为数据的过滤条件
-        String dateType = req.getParameter("dateType");
-        List<String> titleList = getTitleList(dateType);
-        RespDto respDto = new RespDto();
-        if (file == null) {
-            respDto.setMsg("兄弟，你的文件呢？？(*￣︿￣)");
-            return respDto;
-        }
-        // 验证文件是否是excel文件
-        String fileName = file.getOriginalFilename();
-        String[] fileNameArr = fileName.split("\\.");
-        if (fileNameArr.length != 2 || !suffixList.contains(fileNameArr[1])) {
-            respDto.setMsg("写了要上传excel格式文件，看不见？？(*￣︿￣)");
-            return respDto;
-        }
-        try {
-            parseExcel(file.getInputStream(), respDto, titleList);
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (StringUtils.isEmpty(respDto.getMsg())) {
-                respDto.setMsg((StringUtils.isEmpty(e.getMessage()) ? "系统出错啦！！" : e.getMessage()) + "ε(┬┬﹏┬┬)3");
-            }
-        }
-        if (StringUtils.isEmpty(respDto.getMsg())) {
-            respDto.setFlag(true);
-            respDto.setMsg("上传成功，小哥哥正在马不停蹄的处理文件 !!(*^__^*)");
-        }
-        return respDto;
-    }
-
-    /**
-     * Description: 获取需要的表头集合
-     *
-     * @author bai.wenlong
-     * @date 2020/1/13 19:25
-     */
-    private List<String> getTitleList(String dateType) {
-        List<String> titleList = new ArrayList<>();
-        titleList.add("发布补丁");
-        titleList.add("工单环节");
-        if ("1".equals(dateType)) {
-            titleList.add("计划发布日期");
-        } else {
-            titleList.add("研发封版日期");
-        }
-        return titleList;
-    }
-
-    /**
-     * Description: TODO
+     * Description:  解析文件生成图形
      *
      * @param inputStream InputStream
-     * @param respDto
-     * @param titleList
+     * @param respDto     RespDto
      * @author bai.wenlong
      * @date 2020/1/9 14:26
      */
-    private void parseExcel(InputStream inputStream, RespDto respDto, List<String> titleList) throws Exception {
+    @Override
+    public void parseExcelForImage(InputStream inputStream, RespDto respDto, String dateType) throws Exception {
+        List<TaskDto> taskDtoList = parseExcel(inputStream, respDto, dateType);
+        wrapDataForImage(taskDtoList, respDto, dateType);
+        System.out.println("respDto=" + JSONObject.toJSONString(respDto));
+    }
+
+    /**
+     * Description: 解析文件
+     *
+     * @author bai.wenlong
+     * @date 2020/1/21 11:03
+     */
+    @Override
+    public List<TaskDto> parseExcel(InputStream inputStream, RespDto respDto, String dateType) throws Exception {
+        List<String> titleList = getTitleList();
         // 单元格对应的名称集合
         Workbook workbook;
         workbook = WorkbookFactory.create(inputStream);
@@ -137,21 +82,25 @@ public class UploadController {
             taskDtoList.add(getCellData(row, cellMap, linkList));
         }
         respDto.setLinkList(linkList);
-        wrapData(taskDtoList, respDto);
-        System.out.println("respDto=" + JSONObject.toJSONString(respDto));
+        return taskDtoList;
     }
 
     /**
-     * Description: 封装数据
+     * Description: 封装图像数据
      *
      * @author bai.wenlong
      * @date 2020/1/10 12:02
      */
-    private void wrapData(List<TaskDto> taskDtoList, RespDto respDto) {
+    private void wrapDataForImage(List<TaskDto> taskDtoList, RespDto respDto, String dateType) {
         //根据发布分支进行分组
-        Map<String, List<TaskDto>> tempMap = taskDtoList.parallelStream().filter(item -> !StringUtils.isEmpty(item.getPublishPlanDate()))
-                .collect(Collectors.groupingBy(TaskDto::getPublishPatch));
-
+        Map<String, List<TaskDto>> tempMap = null;
+        if ("1".equals(dateType)) {
+            tempMap = taskDtoList.parallelStream().filter(item -> !StringUtils.isEmpty(item.getPublishPlanDate()))
+                    .collect(Collectors.groupingBy(TaskDto::getPublishPatch));
+        } else {
+            tempMap = taskDtoList.parallelStream().filter(item -> !StringUtils.isEmpty(item.getDevDate()))
+                    .collect(Collectors.groupingBy(TaskDto::getPublishPatch));
+        }
         //在key加上发布日期时间
         TreeMap<String, List<TaskDto>> tempMap2 = new TreeMap<>();
         tempMap.forEach((key, value) -> {
@@ -191,18 +140,25 @@ public class UploadController {
         respDto.setPublishPatchList(publishPatchList);
     }
 
+    /**
+     * Description: 获取版本日期，排序使用
+     *
+     * @author bai.wenlong
+     * @date 2020/1/21 10:54
+     */
     public String getDateStr(String verKey) {
-
         String a = spiltRtoL(verKey);
-
         String b = a.substring(1, 12);
-
         String c = spiltRtoL(b);
-
-        System.out.println(c);
         return c;
     }
 
+    /**
+     * Description: 反转字符串
+     *
+     * @author bai.wenlong
+     * @date 2020/1/21 10:54
+     */
     public static String spiltRtoL(String s) {
         StringBuffer sb = new StringBuffer();
         int length = s.length();
@@ -225,10 +181,16 @@ public class UploadController {
      */
     private TaskDto getCellData(Row row, Map<String, Integer> cellMap, List<String> linkList) {
         TaskDto taskDto = new TaskDto();
-        Cell cell = row.getCell(cellMap.get("计划发布日期") == null ? cellMap.get("研发封版日期") : cellMap.get("计划发布日期"));
+        Cell cell = row.getCell(cellMap.get("计划发布日期"));
         if (cell != null) {
             cell.setCellType(Cell.CELL_TYPE_STRING);
             taskDto.setPublishPlanDate(cell.getStringCellValue().trim());
+        }
+
+        cell = row.getCell(cellMap.get("研发封版日期"));
+        if (cell != null) {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            taskDto.setDevDate(cell.getStringCellValue().trim());
         }
 
         cell = row.getCell(cellMap.get("工单环节"));
@@ -245,6 +207,21 @@ public class UploadController {
         if (cell != null) {
             cell.setCellType(Cell.CELL_TYPE_STRING);
             taskDto.setPublishPatch(cell.getStringCellValue());
+        }
+        cell = row.getCell(cellMap.get("工单处理人"));
+        if (cell != null) {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            taskDto.setProcessName(cell.getStringCellValue());
+        }
+        cell = row.getCell(cellMap.get("事务单号"));
+        if (cell != null) {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            taskDto.setTaskNum(cell.getStringCellValue());
+        }
+        cell = row.getCell(cellMap.get("标题"));
+        if (cell != null) {
+            cell.setCellType(Cell.CELL_TYPE_STRING);
+            taskDto.setTitle(cell.getStringCellValue());
         }
         return taskDto;
     }
@@ -273,11 +250,28 @@ public class UploadController {
                 }
             }
         }
-        if (cellMap.size() != 3) {
+        if (cellMap.size() != 7) {
             String str = String.join(",", titleList);
             throw new Exception(str + " 列必须存在！！");
         }
         return cellMap;
     }
 
+    /**
+     * Description: 获取需要的表头集合
+     *
+     * @author bai.wenlong
+     * @date 2020/1/13 19:25
+     */
+    private List<String> getTitleList() {
+        List<String> titleList = new ArrayList<>();
+        titleList.add("发布补丁");
+        titleList.add("工单环节");
+        titleList.add("工单处理人");
+        titleList.add("事务单号");
+        titleList.add("标题");
+        titleList.add("计划发布日期");
+        titleList.add("研发封版日期");
+        return titleList;
+    }
 }

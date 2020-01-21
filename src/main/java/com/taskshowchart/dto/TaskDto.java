@@ -8,9 +8,23 @@ import lombok.Data;
 @Data
 public class TaskDto {
     /**
+     * 标题
+     */
+    private String title;
+    /**
+     * 事务单号
+     */
+    private String taskNum;
+    /**
      * 计划发布日期
      */
     private String publishPlanDate;
+
+    /**
+     * 研发封板日期
+     */
+    private String devDate;
+
     /**
      * 工单环节
      */
@@ -22,17 +36,20 @@ public class TaskDto {
     private String publishPatch;
 
     /**
-     * 项目名称
+     * 处理人名称
      */
-    private String projectName;
+    private String processName;
 
     @Override
     public String toString() {
         return "TaskDto{" +
-                "publishPlanDate='" + publishPlanDate + '\'' +
+                "title='" + title + '\'' +
+                ", taskNum='" + taskNum + '\'' +
+                ", publishPlanDate='" + publishPlanDate + '\'' +
+                ", devDate='" + devDate + '\'' +
                 ", link='" + link + '\'' +
                 ", publishPatch='" + publishPatch + '\'' +
-                ", projectName='" + projectName + '\'' +
+                ", processName='" + processName + '\'' +
                 '}';
     }
 }
