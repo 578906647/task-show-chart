@@ -28,7 +28,7 @@ public class StartBrowser {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-        dingTalkService.pushDdMsg4Warn();
+//        dingTalkService.pushDdMsg4Warn();
 //        dingTalkService.pushDdMsg4Image();
     }
 }

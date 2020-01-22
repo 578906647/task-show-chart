@@ -51,20 +51,20 @@ public class FileServiceImpl implements FileService {
         //工作表对象
         Sheet sheet = workbook.getSheetAt(0);
         if (sheet == null) {
-            respDto.setMsg("文件第一页呢？？(*￣︿￣)");
+            respDto.setMsg("任务单告警推送失败：\n文件第一页呢？？(*￣︿￣)");
             throw new Exception();
         }
         //总行数
         int rowLength = sheet.getLastRowNum() + 1;
-        if (rowLength < 1) {
-            respDto.setMsg("没有数据怎么解析？？(*￣︿￣)");
+        if (rowLength < 2) {
+            respDto.setMsg("任务单告警推送失败：\n没有表头或者数据怎么解析？？(*￣︿￣)");
             throw new Exception();
         }
         System.out.println("总行数有多少行" + rowLength);
         //工作表的列
         Row row = sheet.getRow(0);
         if (row == null) {
-            respDto.setMsg("呕吼，表头呢？？(*￣︿￣)");
+            respDto.setMsg("任务单告警推送失败：\n呕吼，表头呢？？(*￣︿￣)");
             throw new Exception();
         }
         // 获取需要的数据对应的单元格

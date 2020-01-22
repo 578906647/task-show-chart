@@ -96,20 +96,21 @@ public class DingTalkServiceImpl implements DingTalkService {
         RespDto respDto = new RespDto();
         LocalDate date = LocalDate.now();
         File file = new File(fileDir + "/" + date + ".xls");
-        if (!file.exists()) {
-            respDto.setMsg("选择的日期没有数据哦！！(*￣︿￣)");
-        }
         List<TaskDto> taskDtoList = new ArrayList<>();
-        try {
-            taskDtoList = fileService.parseExcel(new FileInputStream(file), respDto, "1");
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (StringUtils.isEmpty(respDto.getMsg())) {
-                respDto.setMsg((StringUtils.isEmpty(e.getMessage()) ? "系统出错啦！！" : e.getMessage()) + "ε(┬┬﹏┬┬)3");
+        if (!file.exists()) {
+            respDto.setMsg("任务单告警推送失败：\n没有找到当天的数据文件！！(*￣︿￣)");
+        } else {
+            try {
+                taskDtoList = fileService.parseExcel(new FileInputStream(file), respDto, "1");
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (StringUtils.isEmpty(respDto.getMsg())) {
+                    respDto.setMsg((StringUtils.isEmpty(e.getMessage()) ? "任务单告警推送出错啦！！" : e.getMessage()) + "ε(┬┬﹏┬┬)3");
+                }
             }
-        }
-        if (StringUtils.isEmpty(respDto.getMsg())) {
-            respDto.setFlag(true);
+            if (StringUtils.isEmpty(respDto.getMsg())) {
+                respDto.setFlag(true);
+            }
         }
         warpAndPushWarnData(taskDtoList, respDto);
     }
@@ -142,7 +143,7 @@ public class DingTalkServiceImpl implements DingTalkService {
             Long timestamp = System.currentTimeMillis();
             String sign = getServerUrl(timestamp);
             String url = serverUrl + "&timestamp=" + timestamp + "&sign=" + sign;
-            DingTalkClient client = new DefaultDingTalkClient(url);
+            DefaultDingTalkClient client = new DefaultDingTalkClient(url);
             OapiRobotSendRequest request = new OapiRobotSendRequest();
             request.setMsgtype("text");
             OapiRobotSendRequest.Text text = new OapiRobotSendRequest.Text();
@@ -262,6 +263,9 @@ public class DingTalkServiceImpl implements DingTalkService {
                     "> ![screenshot](https://note.youdao.com/yws/public/resource/58b17a975e2747e6409f2d2508b7323f/xmlnote/8573969111B34DF5BB07FCF8814955EF/5037)\n" +
                     "> ###### 9点发布 [任务图形](" + getTaskChartUrl() + ") \n");
             request.setMarkdown(markdown);
+            OapiRobotSendRequest.At at = new OapiRobotSendRequest.At();
+            at.setIsAtAll("true");
+            request.setAt(at);
             client.execute(request);
         } catch (Exception e) {
             e.printStackTrace();
