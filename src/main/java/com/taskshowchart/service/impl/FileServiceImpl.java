@@ -104,7 +104,11 @@ public class FileServiceImpl implements FileService {
         //在key加上发布日期时间
         TreeMap<String, List<TaskDto>> tempMap2 = new TreeMap<>();
         tempMap.forEach((key, value) -> {
-            tempMap2.put(key + "(" + value.get(0).getPublishPlanDate() + ")", value);
+            if ("1".equals(dateType)) {
+                tempMap2.put(key + "(" + value.get(0).getPublishPlanDate() + ")", value);
+            } else {
+                tempMap2.put(key + "(" + value.get(0).getDevDate() + ")", value);
+            }
         });
 
         //最终结果map //按照时间排个序
