@@ -28,7 +28,7 @@ public class ScheduledTask {
      * @author bai.wenlong
      * @date 2020/1/20 9:40
      */
-    @Scheduled(cron = "0 13 19 * * *")
+    @Scheduled(cron = "0 30 9 * * *")
     private void pushDdMsg4Warn() {
         dingTalkService.pushDdMsg4Warn();
     }

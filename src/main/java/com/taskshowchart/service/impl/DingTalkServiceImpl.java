@@ -106,7 +106,11 @@ public class DingTalkServiceImpl implements DingTalkService {
         if (!file.exists()) {
             List<String> mobiles = new ArrayList<>();
             mobiles.add(specialMan);
-            pushWarnText("赶快来上传今天的任务单列表喽！！(^￣_￣^)", mobiles);
+            try {
+                pushWarnText("赶快来上传今天的任务单列表喽！！(^￣_￣^) \n" + getTaskChartUrl(), mobiles);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
             return;
         } else {
             try {
@@ -282,7 +286,7 @@ public class DingTalkServiceImpl implements DingTalkService {
             markdown.setTitle("任务单图形推送");
             markdown.setText("#### 充值研发团队-Turbo任务单\n" +
                     "> ![screenshot](https://note.youdao.com/yws/public/resource/58b17a975e2747e6409f2d2508b7323f/xmlnote/8573969111B34DF5BB07FCF8814955EF/5037)\n" +
-                    "> ###### 9点发布 [任务图形](" + getTaskChartUrl() + ") \n");
+                    "> ###### 10点发布 [任务图形](" + getTaskChartUrlView() + ") \n");
             request.setMarkdown(markdown);
             OapiRobotSendRequest.At at = new OapiRobotSendRequest.At();
             at.setIsAtAll("true");
@@ -344,9 +348,20 @@ public class DingTalkServiceImpl implements DingTalkService {
      * @author bai.wenlong
      * @date 2020/1/20 10:08
      */
-    private String getTaskChartUrl() throws UnknownHostException {
+    private String getTaskChartUrlView() throws UnknownHostException {
         return getServerUrl() + "index?view=chart";
     }
+
+    /**
+     * Description: 获取任务单图形化地址
+     *
+     * @author bai.wenlong
+     * @date 2020/1/20 10:08
+     */
+    private String getTaskChartUrl() throws UnknownHostException {
+        return getServerUrl() + "index";
+    }
+
 
     /**
      * Description: 获取签名
