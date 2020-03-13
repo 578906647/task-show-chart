@@ -28,7 +28,7 @@ public class ScheduledTask {
      * @author bai.wenlong
      * @date 2020/1/20 9:40
      */
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 13 19 * * *")
     private void pushDdMsg4Warn() {
         dingTalkService.pushDdMsg4Warn();
     }
@@ -52,6 +52,6 @@ public class ScheduledTask {
      */
     @Scheduled(cron = "0 0 8 * * *")
     private void pullData() {
-        dingTalkService.pullData();
+        //dingTalkService.pullData();
     }
 }

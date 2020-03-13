@@ -18,12 +18,38 @@
 
 <ul id="myTab" class="nav nav-tabs">
     <li class="active">
-        <a href="#upload" data-toggle="tab">图形</a>
+        <a href="#uploadContent" data-toggle="tab">上传</a>
+    </li>
+    <li>
+        <a href="#chartContent" data-toggle="tab">图形</a>
     </li>
 </ul>
 <div id="myTabContent" class="tab-content">
-    <!--表单-->
-    <div class="tab-pane fade in active" id="upload">
+    <!--上传表单-->
+    <div class="tab-pane fade in active" id="uploadContent">
+        <div class="alert alert-success">
+            <strong>提示</strong><br/>
+            文件：只支持以.xls为后缀的文件。
+            并且文件头必须包含"发布补丁"、"工单环节"、"工单处理人"、"事务单号"、"标题"、"计划发布日期"、"研发封版日期"列。<br/>
+            上传：上传到服务器，9:30会自动推送到钉钉。<br/>
+            上传&推送：上传后立即推送到钉钉。<br/>
+        </div>
+        <form id="uploadForm" enctype="multipart/form-data" action="upload">
+            <div class="form-group" >
+                <label for="fileInput" style="float: left">&nbsp;文件：</label>
+                <input id="fileInput" name="file" type="file" style="float: left"/>
+                <button style="float: left;margin-left: 10px" type="button" id="uploadBtn" class="btn btn-primary">
+                    上传
+                </button>
+                <button style="float: left;margin-left: 10px" type="button" id="uploadAndPushBtn" class="btn btn-primary">
+                    上传&推送
+                </button>
+            </div>
+        </form>
+
+    </div>
+    <!--图形表单-->
+    <div class="tab-pane fade" id="chartContent">
         <div class="form-group">
             <label for="dateTypeId">&nbsp;维度：</label>
             <label class="radio-inline">
@@ -44,15 +70,15 @@
             <button style="float: left;margin-left: 10px" type="button" id="queryBtn" class="btn btn-primary">
                 查询
             </button>
-            <button style="float: left;margin-left: 10px" type="button" id="queryNewBtn" class="btn btn-primary">
-                重新拉取最新任务单
-            </button>
+            <!--            <button style="float: left;margin-left: 10px" type="button" id="queryNewBtn" class="btn btn-primary">-->
+            <!--                重新拉取最新任务单-->
+            <!--            </button>-->
         </div>
-    </div>
-    <!--图像div-->
-    <div class="tab-pane fade fade in active" id="chart">
-        <div style="width: 90%; height: 80%" id="canvasDiv">
-            <canvas id="canvas"></canvas>
+        <!--图像div-->
+        <div id="chart">
+            <div style="width: 90%; height: 80%" id="canvasDiv">
+                <canvas id="canvas"></canvas>
+            </div>
         </div>
     </div>
 </div>

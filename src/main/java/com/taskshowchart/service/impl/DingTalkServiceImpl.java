@@ -58,6 +58,12 @@ public class DingTalkServiceImpl implements DingTalkService {
     private String secret;
 
     /**
+     * 特殊@的人
+     */
+    @Value("${dd.talk.special}")
+    private String specialMan;
+
+    /**
      * 端口号
      */
     @Value("${server.port}")
@@ -98,7 +104,10 @@ public class DingTalkServiceImpl implements DingTalkService {
         File file = new File(fileDir + "/" + date + ".xls");
         List<TaskDto> taskDtoList = new ArrayList<>();
         if (!file.exists()) {
-            respDto.setMsg("任务单告警推送失败：\n没有找到当天的数据文件！！(*￣︿￣)");
+            List<String> mobiles = new ArrayList<>();
+            mobiles.add(specialMan);
+            pushWarnText("赶快来上传今天的任务单列表喽！！(^￣_￣^)", mobiles);
+            return;
         } else {
             try {
                 taskDtoList = fileService.parseExcel(new FileInputStream(file), respDto, "1");
@@ -123,12 +132,12 @@ public class DingTalkServiceImpl implements DingTalkService {
      */
     private void warpAndPushWarnData(List<TaskDto> taskDtoList, RespDto respDto) {
         if (!respDto.isFlag()) {
-            pushWarnText(StringUtils.isEmpty(respDto.getMsg()) ? "系统出错了，快去看看吧！！(*￣︿￣)" : respDto.getMsg());
+            pushWarnText(StringUtils.isEmpty(respDto.getMsg()) ? "系统出错了，快去看看吧！！(*￣︿￣)" : respDto.getMsg(), null);
         } else {
             // 推送开发环节数据
-            pushWarnText(parseWarnData4Dev(taskDtoList));
+            pushWarnText(parseWarnData4Dev(taskDtoList), null);
             // 推送测试环节数据
-            pushWarnText(parseWarnData4Test(taskDtoList));
+            pushWarnText(parseWarnData4Test(taskDtoList), null);
         }
     }
 
@@ -138,7 +147,7 @@ public class DingTalkServiceImpl implements DingTalkService {
      * @author bai.wenlong
      * @date 2020/1/21 16:59
      */
-    private void pushWarnText(String content) {
+    private void pushWarnText(String content, List<String> mobiles) {
         try {
             Long timestamp = System.currentTimeMillis();
             String sign = getServerUrl(timestamp);
@@ -148,7 +157,11 @@ public class DingTalkServiceImpl implements DingTalkService {
             request.setMsgtype("text");
             OapiRobotSendRequest.Text text = new OapiRobotSendRequest.Text();
             OapiRobotSendRequest.At at = new OapiRobotSendRequest.At();
-            at.setIsAtAll("true");
+            if (mobiles != null) {
+                at.setAtMobiles(mobiles);
+            } else {
+                at.setIsAtAll("true");
+            }
             request.setAt(at);
             text.setContent(content);
             request.setText(text);
@@ -176,7 +189,11 @@ public class DingTalkServiceImpl implements DingTalkService {
             }
             return compareDate(devDate);
         }).collect(Collectors.groupingBy(TaskDto::getPublishPatch));
-        sb.append(parseNameAndTask(devDataMap));
+        if (devDataMap.size() < 1) {
+            sb.append("研发小伙伴棒棒哒，没有告警的任务单！！(^￣_￣^)");
+        } else {
+            sb.append(parseNameAndTask(devDataMap));
+        }
         return sb.toString();
     }
 
@@ -198,7 +215,11 @@ public class DingTalkServiceImpl implements DingTalkService {
             }
             return compareDate(publishDate);
         }).collect(Collectors.groupingBy(TaskDto::getPublishPatch));
-        sb.append(parseNameAndTask(testDataMap));
+        if (testDataMap.size() < 1) {
+            sb.append("测试小伙伴棒棒哒，没有告警的任务单！！(^￣_￣^)");
+        } else {
+            sb.append(parseNameAndTask(testDataMap));
+        }
         return sb.toString();
     }
 
@@ -324,7 +345,7 @@ public class DingTalkServiceImpl implements DingTalkService {
      * @date 2020/1/20 10:08
      */
     private String getTaskChartUrl() throws UnknownHostException {
-        return getServerUrl() + "index";
+        return getServerUrl() + "index?view=chart";
     }
 
     /**
