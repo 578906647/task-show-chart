@@ -183,7 +183,7 @@ public class DingTalkServiceImpl implements DingTalkService {
      */
     private String parseWarnData4Dev(List<TaskDto> taskDtoList) {
         StringBuilder sb = new StringBuilder();
-        sb.append("开发环节任务单告警(距离转到下一环节时间不足3天)\n");
+        sb.append("开发环节任务单告警(距离转到下一环节时间不足2天)\n");
         //开发告警数据
         Map<String, List<TaskDto>> devDataMap = taskDtoList.stream().filter(item -> {
             String devDate = item.getDevDate();
@@ -209,7 +209,7 @@ public class DingTalkServiceImpl implements DingTalkService {
      */
     private String parseWarnData4Test(List<TaskDto> taskDtoList) {
         StringBuilder sb = new StringBuilder();
-        sb.append("测试环节任务单告警(距离转到下一环节时间不足3天)\n");
+        sb.append("测试环节任务单告警(距离转到下一环节时间不足2天)\n");
         //测试告警数据
         Map<String, List<TaskDto>> testDataMap = taskDtoList.stream().filter(item -> {
             String publishDate = item.getPublishPlanDate();
@@ -262,7 +262,7 @@ public class DingTalkServiceImpl implements DingTalkService {
     private boolean compareDate(String date) {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate regDate = LocalDate.parse(date, dateTimeFormatter);
-        LocalDate futureDate = LocalDate.now().plusDays(3L);
+        LocalDate futureDate = LocalDate.now().plusDays(2L);
         return !regDate.isAfter(futureDate);
     }
 
