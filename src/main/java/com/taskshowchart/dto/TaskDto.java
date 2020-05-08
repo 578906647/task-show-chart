@@ -21,7 +21,7 @@ public class TaskDto {
     private String publishPlanDate;
 
     /**
-     * 研发封板日期
+     * 研发封版日期
      */
     private String devDate;
 

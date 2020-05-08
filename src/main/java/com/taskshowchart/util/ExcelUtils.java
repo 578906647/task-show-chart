@@ -35,7 +35,7 @@ public class ExcelUtils {
     /**
      * Excel文件sheet页的第一行
      */
-    private String[] titleArr = {"标题", "事务单号", "研发封板日期", "计划发布日期", "工单环节", "工单处理人", "发布补丁"};
+    private String[] titleArr = {"标题", "事务单号", "研发封版日期", "计划发布日期", "工单环节", "工单处理人", "发布补丁"};
     /**
      * 表头对应的数据字段
      */
@@ -142,12 +142,17 @@ public class ExcelUtils {
     public boolean createExcelByData(List<TaskDto> taskDtoList) throws Exception {
         LocalDate date = LocalDate.now();
         String filePath = fileDir + "/" + date + ".xls";
+        File dir = new File(fileDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
         //判断该名称的文件是否存在
         File file = new File(filePath);
         if (file.exists()) {
             file.delete();
         }
         //创建
+        file.createNewFile();
         createExcel(filePath);
         //写入到excel
         writeToExcel(filePath, taskDtoList);

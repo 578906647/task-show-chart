@@ -1,5 +1,6 @@
 package com.taskshowchart.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dingtalk.api.DefaultDingTalkClient;
 import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiRobotSendRequest;
@@ -9,11 +10,6 @@ import com.taskshowchart.service.DingTalkService;
 import com.taskshowchart.service.FileService;
 import com.taskshowchart.util.ExcelUtils;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,9 +18,7 @@ import org.springframework.util.StringUtils;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
-import java.net.InetAddress;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -72,11 +66,20 @@ public class DingTalkServiceImpl implements DingTalkService {
     /**
      * zmpUrl
      */
-    @Value("$(zmp.url)")
+    @Value("${zmp.url}")
     private String zmpUrl;
 
+    /**
+     * 文件上传路径
+     */
     @Value("${file.dir}")
     private String fileDir;
+
+    /**
+     * 员工工号
+     */
+    @Value("${staff.code}")
+    private String staffCode;
 
     @Autowired
     private FileService fileService;
@@ -307,7 +310,7 @@ public class DingTalkServiceImpl implements DingTalkService {
     public void pullData() {
         //从ZMP获取数据
         try {
-            List<TaskDto> taskDtoList = new ArrayList<>();
+            List<TaskDto> taskDtoList = requestZmp();
             excelUtils.createExcelByData(taskDtoList);
         } catch (Exception e) {
             e.printStackTrace();
@@ -320,15 +323,70 @@ public class DingTalkServiceImpl implements DingTalkService {
      * @author bai.wenlong
      * @date 2020/1/20 13:53
      */
-    private void requestZmp() throws IOException {
-        HttpClient httpClient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet(zmpUrl);
-        HttpResponse execute = httpClient.execute(httpGet);
-        HttpEntity entity = execute.getEntity();
-        System.out.println(entity);
-        String result = new BufferedReader(new InputStreamReader(entity.getContent()))
-                .lines().collect(Collectors.joining("\n"));
-        System.out.println(result);
+    private List<TaskDto> requestZmp() throws Exception {
+        //从ZMP获取数据
+        PrintWriter out = null;
+        BufferedReader in = null;
+        List<TaskDto> taskDtoList = new ArrayList<>();
+        try {
+
+            URL realUrl = new URL(zmpUrl);
+            // 打开和URL之间的连接
+            URLConnection conn = realUrl.openConnection();
+            // 设置通用的请求属性
+            conn.setRequestProperty("accept", "*/*");
+            conn.setRequestProperty("connection", "Keep-Alive");
+            conn.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+            // 发送POST请求必须设置如下两行
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            //1.获取URLConnection对象对应的输出流
+            out = new PrintWriter(conn.getOutputStream());
+            //2.中文有乱码的需要将PrintWriter改为如下
+            //out=new OutputStreamWriter(conn.getOutputStream(),"UTF-8")
+            // 发送请求参数
+            String param = "{'ACTIVE':'1', 'ORG_STATE':'O', 'DIR_ID':'1,6,7','serviceName':'QueryTansAdv', 'ISREQ':'1'}";
+            JSONObject json = JSONObject.parseObject(param);
+            json.put("STAFF_CODE", staffCode);
+            out.print(json.toJSONString());
+            // flush输出流的缓冲
+            out.flush();
+            // 定义BufferedReader输入流来读取URL的响应
+            in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            StringBuilder result = new StringBuilder();
+            while ((line = in.readLine()) != null) {
+                result.append(line);
+            }
+            List<Map<String, Object>> resultMapList = (List<Map<String, Object>>) JSONObject.parse(result.toString());
+            TaskDto taskDto;
+            for (Map<String, Object> map : resultMapList) {
+                taskDto = new TaskDto();
+                taskDto.setTitle((String) map.get("title"));
+                taskDto.setTaskNum((String) map.get("transId"));
+                taskDto.setDevDate((String) map.get("firstDeliveryDate"));
+                taskDto.setPublishPlanDate((String) map.get("planPublishDate"));
+                taskDto.setLink((String) map.get("dealState"));
+                taskDto.setProcessName((String) map.get("dealStaff"));
+                taskDto.setPublishPatch((String) map.get("patchCode"));
+                taskDtoList.add(taskDto);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("请求ZMP发生错误");
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return taskDtoList;
     }
 
     /**
