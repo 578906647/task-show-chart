@@ -13,6 +13,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.Mac;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -84,6 +86,18 @@ public class DingTalkServiceImpl implements DingTalkService {
     @Autowired
     private FileService fileService;
 
+    private Map<String, String> staffInfoMap;
+
+    /**
+     * 需要@的开发
+     */
+    private List<String> devRemindList = new ArrayList<>();
+
+    /**
+     * 需要@的测试
+     */
+    private List<String> testRemindList = new ArrayList<>();
+
     /**
      * 测试环节
      */
@@ -142,9 +156,9 @@ public class DingTalkServiceImpl implements DingTalkService {
             pushWarnText(StringUtils.isEmpty(respDto.getMsg()) ? "系统出错了，快去看看吧！！(*￣︿￣)" : respDto.getMsg(), null);
         } else {
             // 推送开发环节数据
-            pushWarnText(parseWarnData4Dev(taskDtoList), null);
+            pushWarnText(parseWarnData4Dev(taskDtoList), devRemindList);
             // 推送测试环节数据
-            pushWarnText(parseWarnData4Test(taskDtoList), null);
+            pushWarnText(parseWarnData4Test(taskDtoList), testRemindList);
         }
     }
 
@@ -164,7 +178,7 @@ public class DingTalkServiceImpl implements DingTalkService {
             request.setMsgtype("text");
             OapiRobotSendRequest.Text text = new OapiRobotSendRequest.Text();
             OapiRobotSendRequest.At at = new OapiRobotSendRequest.At();
-            if (mobiles != null) {
+            if (!CollectionUtils.isEmpty(mobiles)) {
                 at.setAtMobiles(mobiles);
             } else {
                 at.setIsAtAll("true");
@@ -199,7 +213,7 @@ public class DingTalkServiceImpl implements DingTalkService {
         if (devDataMap.size() < 1) {
             sb.append("研发小伙伴棒棒哒，没有告警的任务单！！(^￣_￣^)");
         } else {
-            sb.append(parseNameAndTask(devDataMap));
+            sb.append(parseNameAndTask(devDataMap, true));
         }
         return sb.toString();
     }
@@ -225,7 +239,7 @@ public class DingTalkServiceImpl implements DingTalkService {
         if (testDataMap.size() < 1) {
             sb.append("测试小伙伴棒棒哒，没有告警的任务单！！(^￣_￣^)");
         } else {
-            sb.append(parseNameAndTask(testDataMap));
+            sb.append(parseNameAndTask(testDataMap, false));
         }
         return sb.toString();
     }
@@ -236,7 +250,7 @@ public class DingTalkServiceImpl implements DingTalkService {
      * @author bai.wenlong
      * @date 2020/1/21 15:13
      */
-    private String parseNameAndTask(Map<String, List<TaskDto>> map) {
+    private String parseNameAndTask(Map<String, List<TaskDto>> map, boolean devFlag) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, List<TaskDto>> entry : map.entrySet()) {
             String key = entry.getKey();
@@ -251,6 +265,11 @@ public class DingTalkServiceImpl implements DingTalkService {
                 sb.append(":");
                 sb.append(v.stream().map(TaskDto::getTaskNum).collect(Collectors.joining(",")));
                 sb.append("\n");
+                if (devFlag) {
+                    devRemindList.add(staffInfoMap.get(k));
+                } else {
+                    testRemindList.add(staffInfoMap.get(k));
+                }
             }
         }
         return sb.toString();
@@ -435,5 +454,10 @@ public class DingTalkServiceImpl implements DingTalkService {
         mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
         byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
         return URLEncoder.encode(new String(Base64.encodeBase64(signData)), "UTF-8");
+    }
+
+    @Value("${staff.info}")
+    public void parseStaffInfo(String str) {
+        staffInfoMap = (Map<String, String>) JSONObject.parse(str);
     }
 }
