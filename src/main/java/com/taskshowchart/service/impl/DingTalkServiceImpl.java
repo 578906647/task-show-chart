@@ -91,12 +91,12 @@ public class DingTalkServiceImpl implements DingTalkService {
     /**
      * 需要@的开发
      */
-    private List<String> devRemindList = new ArrayList<>();
+    private List<String> devRemindList;
 
     /**
      * 需要@的测试
      */
-    private List<String> testRemindList = new ArrayList<>();
+    private List<String> testRemindList;
 
     /**
      * 测试环节
@@ -155,6 +155,8 @@ public class DingTalkServiceImpl implements DingTalkService {
         if (!respDto.isFlag()) {
             pushWarnText(StringUtils.isEmpty(respDto.getMsg()) ? "系统出错了，快去看看吧！！(*￣︿￣)" : respDto.getMsg(), null);
         } else {
+            devRemindList = new ArrayList<>();
+            testRemindList = new ArrayList<>();
             // 推送开发环节数据
             pushWarnText(parseWarnData4Dev(taskDtoList), devRemindList);
             // 推送测试环节数据
